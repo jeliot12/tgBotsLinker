@@ -1,6 +1,7 @@
-# config.py
+# -*- coding: utf-8 -*-
+
 BOT_TOKEN = "8762092693:AAH8U53qPo0mmUoa_LMEg8pAcUk-gWZ5cHo"
-ADMIN_PASSWORD = "1234"  # Поменяй на свой пароль!
+ADMIN_PASSWORD = "1234"
 
 # Ссылки на площадки
 LINKS = {
@@ -20,9 +21,7 @@ LINKS = {
 
 LINKS_FOOTER = "В случае отключения slon3, slon4, и так далее"
 
-# Хранилище авторизованных админов (временно, до перезапуска)
+# Хранилище
 authorized_admins = set()
-# Режим ожидания пароля
 waiting_password = set()
-# Режим редактирования ссылки
-editing_link = {}  # user_id: link_key
+editing_link = {}
