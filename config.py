@@ -3,6 +3,7 @@
 BOT_TOKEN = "8762092693:AAH8U53qPo0mmUoa_LMEg8pAcUk-gWZ5cHo"
 ADMIN_PASSWORD = "1234"
 
+
 # Ссылки на площадки
 LINKS = {
     "slon2": {
@@ -25,3 +26,4 @@ LINKS_FOOTER = "В случае отключения slon3, slon4, и так д�
 authorized_admins = set()
 waiting_password = set()
 editing_link = {}
+editing_footer = set()  # Новое: кто редактирует футер

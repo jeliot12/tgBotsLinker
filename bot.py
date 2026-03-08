@@ -21,6 +21,7 @@ def back_button():
 def admin_menu():
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton("Изменить ссылки", callback_data="admin_edit_links"))
+    markup.add(InlineKeyboardButton("Изменить подпись (footer)", callback_data="admin_edit_footer"))
     markup.add(InlineKeyboardButton("Показать текущие ссылки", callback_data="admin_show_links"))
     markup.add(InlineKeyboardButton("Выйти из админки", callback_data="admin_logout"))
     return markup
@@ -46,6 +47,7 @@ def get_admin_links_text():
         text += key + "\n"
         text += "   URL: " + data['url'] + "\n"
         text += "   Примечание: " + data['note'] + "\n\n"
+    text += "Подпись (footer):\n" + LINKS_FOOTER
     return text
 
 @bot.message_handler(commands=['start'])
@@ -84,11 +86,15 @@ def admin_command(message):
         "Введите пароль администратора:"
     )
 
-@bot.message_handler(func=lambda message: message.from_user.id in waiting_password or message.from_user.id in editing_link)
+@bot.message_handler(func=lambda message: message.from_user.id in waiting_password or 
+                                          message.from_user.id in editing_link or
+                                          message.from_user.id in editing_footer)
 def handle_admin_input(message):
     user_id = message.from_user.id
     text = message.text
+    global LINKS_FOOTER
     
+    # Проверка пароля
     if user_id in waiting_password:
         waiting_password.discard(user_id)
         
@@ -107,6 +113,19 @@ def handle_admin_input(message):
             )
         return
     
+    # Редактирование футера
+    if user_id in editing_footer:
+        editing_footer.discard(user_id)
+        LINKS_FOOTER = text
+        
+        bot.send_message(
+            message.chat.id,
+            "Подпись обновлена!\n\nНовая подпись:\n" + LINKS_FOOTER,
+            reply_markup=admin_menu()
+        )
+        return
+    
+    # Редактирование ссылки
     if user_id in editing_link:
         link_key = editing_link[user_id]
         del editing_link[user_id]
@@ -138,6 +157,7 @@ def handle_admin_input(message):
 def callback_handler(call):
     user_id = call.from_user.id
     
+    # Пользовательские кнопки
     if call.data == "auth":
         bot.edit_message_text(
             get_links_text(),
@@ -170,12 +190,23 @@ def callback_handler(call):
             reply_markup=main_menu()
         )
     
+    # Админ кнопки
     elif call.data == "admin_edit_links":
         bot.edit_message_text(
             "Выберите ссылку для редактирования:",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             reply_markup=links_edit_menu()
+        )
+    
+    elif call.data == "admin_edit_footer":
+        editing_footer.add(user_id)
+        bot.edit_message_text(
+            "Редактирование подписи (footer)\n\n"
+            "Текущая подпись:\n" + LINKS_FOOTER + "\n\n"
+            "Введите новую подпись:",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id
         )
     
     elif call.data == "admin_show_links":
