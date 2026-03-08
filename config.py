@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-BOT_TOKEN = "8762092693:AAH8U53qPo0mmUoa_LMEg8pAcUk-gWZ5cHo"
+BOT_TOKEN = "5694724281:AAFB5wLVK-k0pegwCxIJlQexqi0KHuQabGY"
 ADMIN_PASSWORD = "1234"
 
 
