@@ -117,10 +117,11 @@ def handle_admin_input(message):
     if user_id in editing_footer:
         editing_footer.discard(user_id)
         LINKS_FOOTER = text
+        save_data()  # Сохраняем в файл
         
         bot.send_message(
             message.chat.id,
-            "Подпись обновлена!\n\nНовая подпись:\n" + LINKS_FOOTER,
+            "Подпись обновлена и сохранена!\n\nНовая подпись:\n" + LINKS_FOOTER,
             reply_markup=admin_menu()
         )
         return
@@ -139,10 +140,11 @@ def handle_admin_input(message):
                 "url": url,
                 "note": note
             }
+            save_data()  # Сохраняем в файл
             
             bot.send_message(
                 message.chat.id,
-                "Ссылка " + link_key + " обновлена!\n\nURL: " + url + "\nПримечание: " + note,
+                "Ссылка " + link_key + " обновлена и сохранена!\n\nURL: " + url + "\nПримечание: " + note,
                 reply_markup=links_edit_menu()
             )
         else:
@@ -268,4 +270,5 @@ def callback_handler(call):
 print("Бот запущен!")
 print("Админ-панель: /admin")
 print("Пароль: " + ADMIN_PASSWORD)
+print("Данные сохраняются в: " + DATA_FILE)
 bot.polling(none_stop=True)
