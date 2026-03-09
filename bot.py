@@ -201,7 +201,7 @@ def callback_handler(call):
     # Пользовательские кнопки
     if call.data == "auth":
         bot.edit_message_text(
-            "Авторизация\n\nВведите логин и пароль",
+            get_links_text(),
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             reply_markup=back_button()
@@ -209,7 +209,7 @@ def callback_handler(call):
     
     elif call.data == "register":
         bot.edit_message_text(
-            "Регистрация\n\nПридумайте логин и пароль",
+            get_links_text(),
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             reply_markup=back_button()
