@@ -21,6 +21,7 @@ def back_button():
 def admin_menu():
     markup = InlineKeyboardMarkup()
     markup.add(InlineKeyboardButton("Изменить ссылки", callback_data="admin_edit_links"))
+    markup.add(InlineKeyboardButton("Удалить ссылку", callback_data="admin_delete_links"))
     markup.add(InlineKeyboardButton("Изменить подпись (footer)", callback_data="admin_edit_footer"))
     markup.add(InlineKeyboardButton("Показать текущие ссылки", callback_data="admin_show_links"))
     markup.add(InlineKeyboardButton("Выйти из админки", callback_data="admin_logout"))
@@ -34,6 +35,13 @@ def links_edit_menu():
     markup.add(InlineKeyboardButton("Назад в админку", callback_data="admin_back"))
     return markup
 
+def links_delete_menu():
+    markup = InlineKeyboardMarkup()
+    for key, data in LINKS.items():
+        markup.add(InlineKeyboardButton("Удалить: " + data['url'], callback_data="delete_" + key))
+    markup.add(InlineKeyboardButton("Назад в админку", callback_data="admin_back"))
+    return markup
+
 def get_links_text():
     text = "Ссылки на площадку\n\nClear:\n"
     for key, data in LINKS.items():
@@ -42,7 +50,7 @@ def get_links_text():
     return text
 
 def get_admin_links_text():
-    text = "Текущие ссылки:\n\n"
+    text = "Текущие ссылки (" + str(len(LINKS)) + "):\n\n"
     for key, data in LINKS.items():
         text += key + "\n"
         text += "   URL: " + data['url'] + "\n"
@@ -88,7 +96,8 @@ def admin_command(message):
 
 @bot.message_handler(func=lambda message: message.from_user.id in waiting_password or 
                                           message.from_user.id in editing_link or
-                                          message.from_user.id in editing_footer)
+                                          message.from_user.id in editing_footer or
+                                          message.from_user.id in deleting_link)
 def handle_admin_input(message):
     user_id = message.from_user.id
     text = message.text
@@ -117,13 +126,43 @@ def handle_admin_input(message):
     if user_id in editing_footer:
         editing_footer.discard(user_id)
         LINKS_FOOTER = text
-        save_data()  # Сохраняем в файл
+        save_data()
         
         bot.send_message(
             message.chat.id,
             "Подпись обновлена и сохранена!\n\nНовая подпись:\n" + LINKS_FOOTER,
             reply_markup=admin_menu()
         )
+        return
+    
+    # Удаление ссылки (подтверждение)
+    if user_id in deleting_link:
+        link_key = deleting_link[user_id]
+        del deleting_link[user_id]
+        
+        if text.lower() == "да":
+            if link_key in LINKS:
+                deleted_url = LINKS[link_key]['url']
+                del LINKS[link_key]
+                save_data()
+                
+                bot.send_message(
+                    message.chat.id,
+                    "Ссылка удалена: " + deleted_url + "\n\nОсталось ссылок: " + str(len(LINKS)),
+                    reply_markup=admin_menu()
+                )
+            else:
+                bot.send_message(
+                    message.chat.id,
+                    "Ошибка: ссылка не найдена",
+                    reply_markup=admin_menu()
+                )
+        else:
+            bot.send_message(
+                message.chat.id,
+                "Удаление отменено",
+                reply_markup=admin_menu()
+            )
         return
     
     # Редактирование ссылки
@@ -140,7 +179,7 @@ def handle_admin_input(message):
                 "url": url,
                 "note": note
             }
-            save_data()  # Сохраняем в файл
+            save_data()
             
             bot.send_message(
                 message.chat.id,
@@ -162,7 +201,7 @@ def callback_handler(call):
     # Пользовательские кнопки
     if call.data == "auth":
         bot.edit_message_text(
-            get_links_text(),
+            "Авторизация\n\nВведите логин и пароль",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             reply_markup=back_button()
@@ -170,7 +209,7 @@ def callback_handler(call):
     
     elif call.data == "register":
         bot.edit_message_text(
-            get_links_text(),
+            "Регистрация\n\nПридумайте логин и пароль",
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             reply_markup=back_button()
@@ -199,6 +238,23 @@ def callback_handler(call):
             chat_id=call.message.chat.id,
             message_id=call.message.message_id,
             reply_markup=links_edit_menu()
+        )
+    
+    elif call.data == "admin_delete_links":
+        if len(LINKS) == 0:
+            bot.edit_message_text(
+                "Нет ссылок для удаления!",
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id,
+                reply_markup=admin_menu()
+            )
+            return
+        
+        bot.edit_message_text(
+            "Выберите ссылку для УДАЛЕНИЯ:\n\nВнимание! Действие нельзя отменить.",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=links_delete_menu()
         )
     
     elif call.data == "admin_edit_footer":
@@ -250,6 +306,22 @@ def callback_handler(call):
                 "Введите новые данные в формате:\n"
                 "url|примечание\n\n"
                 "Пример: slon5.new|новое зеркало, используйте VPN",
+                chat_id=call.message.chat.id,
+                message_id=call.message.message_id
+            )
+    
+    elif call.data.startswith("delete_"):
+        link_key = call.data.replace("delete_", "")
+        
+        if link_key in LINKS:
+            deleting_link[user_id] = link_key
+            
+            bot.edit_message_text(
+                "УДАЛЕНИЕ ССЫЛКИ\n\n"
+                "Вы уверены, что хотите удалить эту ссылку?\n\n"
+                "Ключ: " + link_key + "\n"
+                "URL: " + LINKS[link_key]['url'] + "\n\n"
+                "Введите 'да' для подтверждения или любой другой текст для отмены:",
                 chat_id=call.message.chat.id,
                 message_id=call.message.message_id
             )

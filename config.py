@@ -8,7 +8,6 @@ ADMIN_PASSWORD = "fakosfklpwlf"
 
 DATA_FILE = "bot_data.json"
 
-# Загрузка данных из файла
 def load_data():
     global LINKS, LINKS_FOOTER
     
@@ -21,7 +20,6 @@ def load_data():
         LINKS = DEFAULT_LINKS
         LINKS_FOOTER = DEFAULT_FOOTER
 
-# Сохранение данных в файл
 def save_data():
     data = {
         'links': LINKS,
@@ -30,7 +28,6 @@ def save_data():
     with open(DATA_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
-# Дефолтные значения
 DEFAULT_LINKS = {
     "slon2": {
         "url": "slon2.to",
@@ -48,7 +45,6 @@ DEFAULT_LINKS = {
 
 DEFAULT_FOOTER = "В случае отключения slon3, slon4, и так далее"
 
-# Загружаем при старте
 LINKS = {}
 LINKS_FOOTER = ""
 load_data()
@@ -58,3 +54,4 @@ authorized_admins = set()
 waiting_password = set()
 editing_link = {}
 editing_footer = set()
+deleting_link = {}  # Вот она!
